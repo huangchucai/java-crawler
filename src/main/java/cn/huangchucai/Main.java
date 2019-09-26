@@ -52,7 +52,7 @@ public class Main {
         return (link.contains("news.sina.cn") || link.equals("https://sina.cn")) && !link.contains("passport.sina.cn") && !link.contains("hotnews.sina.cn");
     }
 
-    private static Document httpGetAndParseHtml(String link) {
+    private static Document httpGetAndParseHtml(String link) throws IOException {
         if (link.startsWith("//")) {
             link = "https:" + link;
         }
