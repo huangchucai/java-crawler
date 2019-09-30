@@ -1,5 +1,6 @@
 package cn.huangchucai;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -11,30 +12,76 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
-        List<String> linksPools = new ArrayList();
-        Set<String> handledLinks = new HashSet<>();
-        linksPools.add("https://sina.cn");
-        while (true) {
-            if (linksPools.isEmpty()) {
-                break;
-            }
-            String link = linksPools.remove(linksPools.size() - 1);
-            if (handledLinks.contains(link)) {
+    @SuppressFBWarnings("DMI_CONSTANT_DB_PASSWORD")
+    public static void main(String[] args) throws IOException, SQLException {
+        Connection connection = DriverManager.getConnection("jdbc:h2:file:/Users/huangchucai/temp/java/java-crawler/news", "root", "root");
+        String link;
+        while ((link = getNextLinkThenDelete(connection)) != null) {
+            if (isLinkProcessed(connection, link)) {
                 continue;
             }
             if (isInterestedLink(link)) {
                 Document document = httpGetAndParseHtml(link);
-                document.select("a").stream().map(aTag -> aTag.attr("href")).forEach(linksPools::add);
+                parseUrlsFromPageAndStoreIntoDatabase(connection, document);
                 storeIntoDBIfItIsNewsPage(document);
-                handledLinks.add(link);
+                updateDatabase(connection, link, "insert into LINKS_ALREADY_PROCESSED(link) values (?)");
             }
+        }
+    }
+
+    private static String getNextLinkThenDelete(Connection connection) throws SQLException {
+        String link = loadByUrlFromDatabase(connection, "select link from LINKS_TO_BE_PROCESSED LIMIT 1");
+        if (link != null) {
+            updateDatabase(connection, link, "delete from LINKS_TO_BE_PROCESSED where link = ?");
+        }
+        return link;
+    }
+
+    private static void parseUrlsFromPageAndStoreIntoDatabase(Connection connection, Document document) throws SQLException {
+        for (Element aTag : document.select("a")) {
+            String href = aTag.attr("href");
+            updateDatabase(connection, href, "insert into LINKS_TO_BE_PROCESSED(link) values (?)");
+        }
+    }
+
+    private static boolean isLinkProcessed(Connection connection, String link) throws SQLException {
+        ResultSet resultSet = null;
+        try (PreparedStatement preparedStatement = connection.prepareStatement("select link from LINKS_ALREADY_PROCESSED where LINK = ?")) {
+            preparedStatement.setString(1, link);
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                return true;
+            }
+        } finally {
+            if (resultSet != null) {
+                resultSet.close();
+            }
+        }
+        return false;
+    }
+
+    private static void updateDatabase(Connection connection, String link, String sql) throws SQLException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, link);
+            preparedStatement.executeUpdate();
+        }
+
+    }
+
+    private static String loadByUrlFromDatabase(Connection connection, String sql) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(sql); ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                return resultSet.getString(1);
+            }
+            return null;
         }
     }
 
