@@ -18,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class Main {
     @SuppressFBWarnings("DMI_CONSTANT_DB_PASSWORD")
@@ -29,9 +30,10 @@ public class Main {
                 continue;
             }
             if (isInterestedLink(link)) {
+                System.out.println(link);
                 Document document = httpGetAndParseHtml(link);
                 parseUrlsFromPageAndStoreIntoDatabase(connection, document);
-                storeIntoDBIfItIsNewsPage(document);
+                storeIntoDBIfItIsNewsPage(connection, link, document);
                 updateDatabase(connection, link, "insert into LINKS_ALREADY_PROCESSED(link) values (?)");
             }
         }
@@ -48,7 +50,13 @@ public class Main {
     private static void parseUrlsFromPageAndStoreIntoDatabase(Connection connection, Document document) throws SQLException {
         for (Element aTag : document.select("a")) {
             String href = aTag.attr("href");
-            updateDatabase(connection, href, "insert into LINKS_TO_BE_PROCESSED(link) values (?)");
+
+            if (href.startsWith("//")) {
+                href = "https:" + href;
+            }
+            if (!href.startsWith("javascript") && !href.startsWith("#")) {
+                updateDatabase(connection, href, "insert into LINKS_TO_BE_PROCESSED(link) values (?)");
+            }
         }
     }
 
@@ -85,11 +93,20 @@ public class Main {
         }
     }
 
-    private static void storeIntoDBIfItIsNewsPage(Document document) {
+    private static void storeIntoDBIfItIsNewsPage(Connection connection, String link, Document document) throws SQLException {
         ArrayList<Element> articleTags = document.select("article");
         if (!articleTags.isEmpty()) {
             for (Element acticleTag : articleTags) {
-                System.out.println(acticleTag.child(0).text());
+                String title = acticleTag.child(0).text();
+
+                String content = acticleTag.select("p").stream().map(Element::text).collect(Collectors.joining("\n"));
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement("insert into news(TITLE, CONTENT, URL, CREATED_AT, MODIFIED_AT) values ( ?,?,?, now(), now() )")) {
+                    preparedStatement.setString(1, title);
+                    preparedStatement.setString(2, content);
+                    preparedStatement.setString(3, link);
+                    preparedStatement.executeUpdate();
+                }
             }
         }
     }
@@ -100,9 +117,6 @@ public class Main {
     }
 
     private static Document httpGetAndParseHtml(String link) throws IOException {
-        if (link.startsWith("//")) {
-            link = "https:" + link;
-        }
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpGet httpGet = new HttpGet(link);
         try (CloseableHttpResponse response1 = httpclient.execute(httpGet)) {
