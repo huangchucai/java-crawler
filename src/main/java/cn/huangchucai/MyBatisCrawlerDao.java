@@ -40,11 +40,8 @@ public class MyBatisCrawlerDao implements CrawlerDao {
     public boolean isLinkProcessed(String link) throws SQLException {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             Integer count = session.selectOne("cn.huangchucai.mybatisMapper.isLinkProcessed");
-            if (count != 0) {
-                return true;
-            }
+            return count != 0;
         }
-        return false;
     }
 
     @Override
@@ -56,22 +53,22 @@ public class MyBatisCrawlerDao implements CrawlerDao {
     }
 
     @Override
-    public void insertLinkIntoAlreadyProcessed(String link) throws SQLException {
-        HashMap hashMap = new HashMap();
-        hashMap.put("tableName", "LINKS_ALREADY_PROCESSED");
-        hashMap.put("link", link);
+    public void insertLinkIntoAlreadyProcessed(String link) {
+        HashMap<String, String> params = new HashMap<>();
+        params.put("tableName", "LINKS_ALREADY_PROCESSED");
+        params.put("link", link);
         try(SqlSession session = sqlSessionFactory.openSession(true)) {
-            session.insert("cn.huangchucai.mybatisMapper.insertLink", hashMap);
+            session.insert("cn.huangchucai.mybatisMapper.insertLink", params);
         }
     }
 
     @Override
-    public void insertLinkToBeProcessed(String href) throws SQLException {
-        HashMap hashMap = new HashMap();
-        hashMap.put("tableName", "LINKS_TO_BE_PROCESSED");
-        hashMap.put("link", href);
+    public void insertLinkToBeProcessed(String href) {
+        HashMap<String, String> params = new HashMap<>();
+        params.put("tableName", "LINKS_TO_BE_PROCESSED");
+        params.put("link", href);
         try(SqlSession session = sqlSessionFactory.openSession(true)) {
-            session.insert("cn.huangchucai.mybatisMapper.insertLink", hashMap);
+            session.insert("cn.huangchucai.mybatisMapper.insertLink", params);
         }
     }
 }
