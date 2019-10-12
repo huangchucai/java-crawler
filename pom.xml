@@ -32,6 +32,12 @@
             <version>1.4.199</version>
             <scope>compile</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.6</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -126,17 +132,10 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>6.0.4</version>
                 <configuration>
-                    <url>jdbc:h2:file:/Users/huangchucai/temp/java/java-crawler/news</url>
+                    <url>jdbc:mysql://localhost:3306/news</url>
                     <user>root</user>
                     <password>root</password>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.h2database</groupId>
-                        <artifactId>h2</artifactId>
-                        <version>1.4.199</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>
