@@ -46,7 +46,7 @@ public class Crawler {
             if (href.startsWith("//")) {
                 href = "https:" + href;
             }
-            if (!href.startsWith("javascript") && !href.startsWith("#")) {
+            if (!href.equals("") && !href.startsWith("javascript") && !href.startsWith("#")) {
                 dao.insertLinkToBeProcessed(href);
             }
         }

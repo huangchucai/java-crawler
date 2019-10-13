@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 
 public class MyBatisCrawlerDao implements CrawlerDao {
-    private final String resource = "db/mybatis/config.xml";
+    private static final String resource = "db/mybatis/config.xml";
     private SqlSessionFactory sqlSessionFactory;
 
     public MyBatisCrawlerDao() {
