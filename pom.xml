@@ -69,6 +69,11 @@
             <artifactId>mybatis</artifactId>
             <version>3.4.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-typehandlers-jsr310</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>

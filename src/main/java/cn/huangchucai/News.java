@@ -1,14 +1,55 @@
 package cn.huangchucai;
 
+import java.time.Instant;
+
 public class News {
+    private Integer id;
     private String title;
     private String content;
     private String url;
+    private Instant createdAt;
+    private Instant modifiedAt;
 
     public News(String title, String content, String url) {
         this.title = title;
         this.content = content;
         this.url = url;
+    }
+
+    public News() {
+    }
+
+    public News(News old) {
+        this.id = old.id;
+        this.title = old.title;
+        this.content = old.content;
+        this.url = old.url;
+        this.createdAt = old.createdAt;
+        this.modifiedAt = old.modifiedAt;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Instant getModifiedAt() {
+        return modifiedAt;
+    }
+
+    public void setModifiedAt(Instant modifiedAt) {
+        this.modifiedAt = modifiedAt;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
     public String getTitle() {
