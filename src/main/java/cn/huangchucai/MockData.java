@@ -24,7 +24,7 @@ public class MockData {
             try {
                 while (count-- > 0) {
                     System.out.println("剩余多少条: " + count);
-                    if(count % 2000 == 0) {
+                    if (count % 2000 == 0) {
                         session.flushStatements();
                     }
                     int index = random.nextInt(newsList.size());
@@ -38,12 +38,13 @@ public class MockData {
                     session.insert("cn.huangchucai.mockDataMapper.insertNews", newsToBeInsert);
                 }
                 session.commit();
-            } catch (Exception e){
+            } catch (Exception e) {
                 session.rollback();
                 throw new RuntimeException(e);
             }
         }
     }
+
     public static void main(String[] args) {
         String resource = "db/mybatis/config.xml";
         InputStream inputStream = null;
